@@ -136,16 +136,14 @@ public class SortDraw {
             chart.drawText(4*offset, chartHeight + titleSpace + offset, "sorting completed!");
         }
 
-        chart.show();
-        Thread.sleep(milliseconds);
+        chart.show(milliseconds);
     }
 
     private static void highlightBar(CodeDraw chart, int chartHeight, int offset, int titleSpace, int barWidth, int barIndex, int milliseconds) throws InterruptedException {
         chart.setColor(Color.red);
         chart.drawRectangle(4*offset + barIndex*barWidth, titleSpace, barWidth, chartHeight);
         chart.setColor(Color.black);
-        chart.show();
-        Thread.sleep(milliseconds);
+        chart.show(milliseconds);
     }
 
     private static void endOfIterationText(SortMethod sortMethod, CodeDraw chart, int chartHeight, int offset, int titleSpace, int iteration, int milliseconds) throws InterruptedException {
@@ -172,8 +170,7 @@ public class SortDraw {
             default -> {}
         }
 
-        chart.show();
-        Thread.sleep(milliseconds * 2);
+        chart.show(milliseconds * 2);
     }
 
 

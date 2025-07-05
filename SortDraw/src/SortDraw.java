@@ -5,31 +5,36 @@ import java.util.Random;
 
 public class SortDraw {
 
+    // main settings
+    static final SortMethod sortMethod = SortMethod.MERGE; // choose from INSERTION, SELECTION, BUBBLE and MERGE
+    static final int cardinality = 31; // amount of data points to be sorted - recommended range is [10, 100]
+    static final int lowerBound = 0; // lower bound of values (inclusive)
+    static final int upperBound = 50; // upper bound of values (exclusive)
+    static final long milliseconds = 2000L; // the freeze time upon changes in the graphical representation
+    static final int splitCutoff = 5; // in merge sort, if the recursion level has at most this many data points, then insertion sort is used rather than entering another recursion
+
+    // visual settings
+    static final int canvasWidth = 800;
+    static final int canvasHeight = 600;
+
+    // better leave these alone
+    static final int titleSpace = canvasHeight / 10;
+    static final int offset = canvasWidth / 100;
+    static final int chartWidth = canvasWidth - 5 * offset;
+    static final int chartHeight = canvasHeight - 2 * titleSpace;
+    static final double barWidth = (double) chartWidth / cardinality;
+    static final CodeDraw chart = new CodeDraw(canvasWidth, canvasHeight);
+
+
     private enum SortMethod {
-        BUBBLE,
         INSERTION,
         SELECTION,
+        BUBBLE,
         MERGE
     }
-    public static void main(String[] args) throws InterruptedException {
 
-        // This block can be seen as "settings" - feel free to change the values to an arbitrary (but reasonable) value
-        SortMethod sortMethod = SortMethod.MERGE;
-        int canvasWidth = 800;
-        int canvasHeight = 600;
-        int cardinality = 27;
-        int lowerBound = 0;
-        int upperBound = 50;
-        int milliseconds = 2000;
+    public static void main(String[] args) {
 
-        int titleSpace = canvasHeight / 10;
-        int offset = canvasWidth / 100;
-        int chartWidth = canvasWidth - 5*offset;
-        int chartHeight = canvasHeight - 2*titleSpace;
-        double barWidth = (double) chartWidth / cardinality;
-
-        CodeDraw chart = new CodeDraw(canvasWidth, canvasHeight);
-        int cutoff = 5;
         Random random = new Random();
         int[] data = new int[cardinality];
         for (int i = 0; i < cardinality; i++) {
@@ -37,99 +42,100 @@ public class SortDraw {
         }
         //int[] data = random.ints(cardinality, lowerBound, upperBound).toArray();
 
-        switch (sortMethod){
+        switch (sortMethod) {
+
             // insertion sort
             case INSERTION -> {
                 chart.setTitle("Insertion Sort");
                 for (int i = 1; i < data.length; i++) {
-                    drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, i, milliseconds);
+                    drawChart(data, i, 0, i + 1);
                     for (int j = i; j > 0 && data[j] < data[j - 1]; j--) {
-                        highlightBarGroup(chart, chartHeight, offset, titleSpace, barWidth, j, 1, milliseconds);
-                        highlightBarGroup(chart, chartHeight, offset, titleSpace, barWidth, j-1, 1, milliseconds);
+                        highlightBarGroup(j, 1);
+                        highlightBarGroup(j - 1, 1);
                         exchange(data, j, j - 1);
-                        drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, i, milliseconds);
+                        drawChart(data, i, 0, j);
                     }
-                    endOfIterationText(sortMethod, chart, chartHeight, offset, titleSpace, i, milliseconds);
+                    endOfIterationText(i);
                 }
-                drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, cardinality, milliseconds);
+                drawChart(data, cardinality, 0, cardinality);
             }
 
             // selection sort
             case SELECTION -> {
                 chart.setTitle("Selection Sort");
-                for (int i = 0 ; i < data.length - 1 ; i++){
-                    drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, i+1, milliseconds);
+                for (int i = 0; i < data.length - 1; i++) {
+                    drawChart(data, i + 1, i, cardinality);
 
                     int min = i;
-                    for (int j = i + 1 ; j < data.length ; j++){
-                        if (data[j] < data[min]){
+                    for (int j = i + 1; j < data.length; j++) {
+                        if (data[j] < data[min]) {
                             min = j;
                         }
                     }
-                    highlightBarGroup(chart, chartHeight, offset, titleSpace, barWidth, i, 1, milliseconds);
-                    highlightBarGroup(chart, chartHeight, offset, titleSpace, barWidth, min, 1, milliseconds);
+                    highlightBarGroup(i, 1);
+                    highlightBarGroup(min, 1);
                     exchange(data, i, min);
-                    drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, i+1, milliseconds);
-                    endOfIterationText(sortMethod, chart, chartHeight, offset, titleSpace, i+1, milliseconds);
+                    drawChart(data, i + 1, i + 1, cardinality);
+                    endOfIterationText(i + 1);
                 }
-                drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, cardinality, milliseconds);
+                drawChart(data, cardinality, 0, cardinality);
             }
 
             // bubble sort
             case BUBBLE -> {
                 chart.setTitle("Bubble Sort");
-                for (int i = 0; i < data.length - 1 ; i++){
-                    drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, i+1, milliseconds);
-                    for (int j = 0 ; j < data.length - i - 1 ; j++){
-                        if (data [j] > data [j + 1]){
-                            highlightBarGroup(chart, chartHeight, offset, titleSpace, barWidth, j, 1, milliseconds);
-                            highlightBarGroup(chart, chartHeight, offset, titleSpace, barWidth, j+1, 1, milliseconds);
-                            exchange (data, j,j + 1);
-                            drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, i+1, milliseconds);
+                for (int i = 0; i < data.length - 1; i++) {
+                    drawChart(data, i + 1, 0, cardinality);
+                    for (int j = 0; j < data.length - i - 1; j++) {
+                        if (data[j] > data[j + 1]) {
+                            highlightBarGroup(j, 1);
+                            highlightBarGroup(j + 1, 1);
+                            exchange(data, j, j + 1);
+                            drawChart(data, i + 1, j + 1, cardinality);
                         }
                     }
-                    endOfIterationText(sortMethod, chart, chartHeight, offset, titleSpace, i+1, milliseconds);
+                    endOfIterationText(i + 1);
                 }
-                drawChart(sortMethod, chart, chartWidth, chartHeight, offset, titleSpace, data, lowerBound, upperBound, cardinality, milliseconds);
+                drawChart(data, cardinality, 0, cardinality);
             }
 
+            // merge sort
             case MERGE -> {
                 chart.setTitle("Merge Sort");
-                // drawData is an object of type DrawData which is defined at the bottom of this file
-                // the purpose is to encapsulate information (data) needed for updating the chart without inflating the input parameters of the recursive calls of mergeSort
-                DrawData drawData = new DrawData(canvasWidth, canvasHeight, milliseconds, titleSpace, offset, chartWidth, chartHeight, barWidth, lowerBound, upperBound, chart);
                 int[] help = new int[data.length];
-                mergeSort(data, help, 0, data.length - 1, cutoff, 0, drawData);
+                mergeSort(data, help, 0, data.length - 1, splitCutoff, 0);
+                chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2., "sorting completed!");
+                chart.show();
             }
 
-            default -> {}
+            default -> {
+            }
         }
-
     }
-    private static void mergeSort(int[] data, int[] help, int lo, int hi, int cutoff, int i, DrawData drawData) throws InterruptedException {
+
+    private static void mergeSort(int[] data, int[] help, int lo, int hi, int cutoff, int i) {
         if (hi <= lo) return;
-        drawChart(SortMethod.MERGE, drawData.chart, drawData.chartWidth, drawData.chartHeight, drawData.offset, drawData.titleSpace, data, drawData.lowerBound, drawData.upperBound, i, drawData.milliseconds);
-        highlightBarGroup(drawData.chart, drawData.chartHeight, drawData.offset, drawData.titleSpace, drawData.barWidth, lo, hi-lo+1, drawData.milliseconds);
-        int mid = lo + (hi - lo) / 2;
-        if (hi - lo < cutoff){
-            drawData.chart.drawText(4*drawData.offset, drawData.chartHeight + drawData.titleSpace + drawData.titleSpace/2,
-                    "Cutoff cardinality of " + cutoff + " reached - using insertion sort...");
-            drawData.chart.show(drawData.milliseconds);
+        drawChart(data, i, lo, hi + 1);
+        highlightBarGroup(lo, hi - lo + 1);
+        if (hi - lo < cutoff) {
+            chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                    "Less than " + (cutoff + 1) + " data points - using insertion sort...");
+            chart.show(milliseconds);
             boundedInsertionSort(data, lo, hi);
-        }
-        else {
-            drawData.chart.drawText(4*drawData.offset, drawData.chartHeight + drawData.titleSpace + drawData.titleSpace/2,
-                    "Cutoff cardinality of " + cutoff + " not reached - splitting into recursion level " + (i+1));
-            drawData.chart.show(drawData.milliseconds);
-            mergeSort(data, help, lo, mid, cutoff, i + 1, drawData);
-            mergeSort(data, help, mid + 1, hi, cutoff, i + 1, drawData);
-            highlightBarGroup(drawData.chart, drawData.chartHeight, drawData.offset, drawData.titleSpace, drawData.barWidth, lo, hi-lo+1, drawData.milliseconds);
+        } else {
+            int mid = lo + (hi - lo) / 2;
+            chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                    "More than " + cutoff + " data points - splitting into recursion level " + (i + 1));
+            chart.show(milliseconds);
+            mergeSort(data, help, lo, mid, cutoff, i + 1);
+            mergeSort(data, help, mid + 1, hi, cutoff, i + 1);
+            highlightBarGroup(lo, hi - lo + 1);
             merge(data, help, lo, mid, hi);
-            drawData.chart.drawText(4*drawData.offset, drawData.chartHeight + drawData.titleSpace + drawData.titleSpace/2,
-                    "Merging recursion level " + (i+1) + " into level " + i);
-            drawData.chart.show(drawData.milliseconds);
+            chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                    "Merging recursion level " + (i + 1) + " into level " + i);
+            chart.show(milliseconds);
         }
-        drawChart(SortMethod.MERGE, drawData.chart, drawData.chartWidth, drawData.chartHeight,drawData.offset, drawData.titleSpace, data, drawData.lowerBound, drawData.upperBound, i, drawData.milliseconds);
+        drawChart(data, i, lo, hi + 1);
     }
 
     private static void merge(int[] data, int[] help, int lo, int mid, int hi) {
@@ -152,111 +158,102 @@ public class SortDraw {
             }
         }
     }
+
     private static void exchange(int[] data, int i, int j) {
         int swap = data[i];
         data[i] = data[j];
         data[j] = swap;
     }
 
-    private static void drawChart(SortMethod sortMethod, CodeDraw chart, int chartWidth, int chartHeight, int offset, int titleSpace, int[] data, int lowerBound, int upperBound, int iteration, int milliseconds) throws InterruptedException {
-        int barMaxHeight = chartHeight - offset;
-        double barWidth = (double) chartWidth / data.length;
-
+    private static void drawChart(int[] data, int iteration, int lo, int hi) {
         chart.clear();
-        switch (sortMethod){
-            case INSERTION -> chart.drawText(4*offset, offset, "Insertion Sort");
-            case SELECTION -> chart.drawText(4*offset, offset, "Selection Sort");
-            case BUBBLE -> chart.drawText(4*offset, offset, "Bubble Sort");
-            case MERGE -> chart.drawText(4*offset, offset, "Merge Sort");
-            default -> {}
+        switch (sortMethod) {
+            case INSERTION -> chart.drawText(4 * offset, offset, "Insertion Sort");
+            case SELECTION -> chart.drawText(4 * offset, offset, "Selection Sort");
+            case BUBBLE -> chart.drawText(4 * offset, offset, "Bubble Sort");
+            case MERGE -> chart.drawText(4 * offset, offset, "Merge Sort");
+            default -> {
+            }
         }
 
-        chart.drawRectangle(4*offset,titleSpace, chartWidth, chartHeight);
+        chart.drawRectangle(4 * offset, titleSpace, chartWidth, chartHeight);
 
+        int barMaxHeight = chartHeight - offset;
+        chart.setColor(Color.gray);
         for (int i = 0; i < data.length; i++) {
+            if (i == lo) {
+                chart.setColor(Color.black);
+            } else if (i == hi) {
+                chart.setColor(Color.gray);
+            }
             int barHeight = (int) ((double) data[i] / upperBound * barMaxHeight + offset);
-            chart.fillRectangle(4*offset + i*barWidth, chartHeight + titleSpace - barHeight ,barWidth-1, barHeight);
+            chart.fillRectangle(4 * offset + i * barWidth, chartHeight + titleSpace - barHeight, barWidth - 1, barHeight);
         }
-        if (sortMethod == SortMethod.MERGE){
-            chart.drawText(4*offset, chartHeight + titleSpace + offset, "recursion level " + iteration);
-        }
-        else {
-            if (iteration < data.length){
-                if (sortMethod == SortMethod.INSERTION){
-                    chart.setColor(Color.blue);
-                    chart.drawLine(4*offset + (iteration+1)*barWidth, titleSpace - offset, 4*offset + (iteration+1)*barWidth, chartHeight + titleSpace + offset);
-                    chart.setColor(Color.black);
-                }
-                chart.drawText(4*offset, chartHeight + titleSpace + offset, "outer loop iteration #" + iteration);
-            }
-            else {
-                chart.drawText(4*offset, chartHeight + titleSpace + offset, "sorting completed!");
-            }
-        }
-        chart.show(milliseconds);
-    }
-    private static void highlightBarGroup(CodeDraw chart, int chartHeight, int offset, int titleSpace, double barWidth, int barIndex, int barCount, int milliseconds) throws InterruptedException {
-        chart.setColor(Color.red);
-        chart.drawRectangle(4*offset + barIndex*barWidth, titleSpace, barCount*barWidth, chartHeight);
         chart.setColor(Color.black);
+
+        if (iteration >= data.length) {
+            chart.drawText(4 * offset, chartHeight + titleSpace + offset, "sorting completed!");
+        } else {
+            switch (sortMethod) {
+                case INSERTION -> {
+                    chart.setColor(Color.cyan);
+                    chart.setLineWidth(3);
+                    chart.drawLine(4 * offset + (iteration + 1) * barWidth, titleSpace - offset,
+                            4 * offset + (iteration + 1) * barWidth, chartHeight + titleSpace + offset);
+                    chart.setColor(Color.black);
+                    chart.setLineWidth(1);
+                    chart.drawText(4 * offset, chartHeight + titleSpace + offset, "outer loop iteration #" + iteration);
+                }
+                case SELECTION, BUBBLE ->
+                        chart.drawText(4 * offset, chartHeight + titleSpace + offset, "outer loop iteration #" + iteration);
+                case MERGE ->
+                        chart.drawText(4 * offset, chartHeight + titleSpace + offset, "recursion level " + iteration);
+                default -> {
+                }
+            }
+        }
+
         chart.show(milliseconds);
     }
 
-    private static void endOfIterationText(SortMethod sortMethod, CodeDraw chart, int chartHeight, int offset, int titleSpace, int iteration, int milliseconds) throws InterruptedException {
-        switch (sortMethod){
+    private static void highlightBarGroup(int barIndex, int barCount) {
+        chart.setColor(Color.red);
+        chart.setLineWidth(3);
+        chart.drawRectangle(4 * offset + barIndex * barWidth, titleSpace, barCount * barWidth, chartHeight);
+        chart.setColor(Color.black);
+        chart.setLineWidth(1);
+        chart.show(milliseconds);
+    }
+
+    private static void endOfIterationText(int iteration) {
+        switch (sortMethod) {
             case INSERTION -> {
-                chart.drawText(4*offset, chartHeight + titleSpace + titleSpace/2, "data sorted up to marker - starting next iteration...");
+                chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                        "Data locally sorted up to marker - starting next iteration...");
             }
             case SELECTION -> {
-                if (iteration == 1){
-                    chart.drawText(4*offset, chartHeight + titleSpace + titleSpace/2, "the first entry is on its correct index - starting next iteration...");
-                }
-                else{
-                    chart.drawText(4*offset, chartHeight + titleSpace + titleSpace/2, "the first " + iteration + " entries are on their correct indexes - starting next iteration...");
+                if (iteration == 1) {
+                    chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                            "The first entry is globally sorted - starting next iteration...");
+                } else {
+                    chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                            "The first " + iteration + " entries are globally sorted - starting next iteration...");
                 }
             }
             case BUBBLE -> {
-                if (iteration == 1){
-                    chart.drawText(4*offset, chartHeight + titleSpace + titleSpace/2, "the last entry is on its correct index - starting next iteration...");
-                }
-                else{
-                    chart.drawText(4*offset, chartHeight + titleSpace + titleSpace/2, "the last " + iteration + " entries are on their correct indexes - starting next iteration...");
+                if (iteration == 1) {
+                    chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                            "The last entry is globally sorted - starting next iteration...");
+                } else {
+                    chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2,
+                            "The last " + iteration + " entries are globally sorted - starting next iteration...");
                 }
             }
-            default -> {}
+            default -> {
+            }
         }
 
         chart.show(milliseconds * 2);
-    }
-
-    // the purpose of the class DrawData is to encapsulate information (data) needed for updating the chart without inflating the input parameters of the recursive calls of mergeSort
-    static class DrawData {
-        public DrawData(int canvasWidth, int canvasHeight, int milliseconds, int titleSpace, int offset, int chartWidth, int chartHeight, double barWidth, int lowerBound, int upperBound, CodeDraw chart) {
-            this.canvasWidth = canvasWidth;
-            this.canvasHeight = canvasHeight;
-            this.milliseconds = milliseconds;
-            this.titleSpace = titleSpace;
-            this.offset = offset;
-            this.chartWidth = chartWidth;
-            this.chartHeight = chartHeight;
-            this.barWidth = barWidth;
-            this.lowerBound = lowerBound;
-            this.upperBound = upperBound;
-            this.chart = chart;
-        }
-        int canvasWidth;
-        int canvasHeight;
-        int milliseconds;
-
-        int titleSpace;
-        int offset;
-        int chartWidth;
-        int chartHeight;
-        double barWidth;
-        int lowerBound;
-        int upperBound;
-
-        CodeDraw chart;
     }
 
 }

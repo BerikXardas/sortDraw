@@ -1,4 +1,6 @@
 import codedraw.CodeDraw;
+import codedraw.TextFormat;
+import codedraw.TextOrigin;
 
 import java.awt.*;
 import java.util.Random;
@@ -8,20 +10,19 @@ public class SortDraw {
     // main settings
     static final SortMethod sortMethod = SortMethod.MERGE; // choose from INSERTION, SELECTION, BUBBLE and MERGE
     static final int cardinality = 31; // amount of data points to be sorted - recommended range is [10, 100]
-    static final int lowerBound = 0; // lower bound of values (inclusive)
+    static final int lowerBound = 0; // lower bound of values (inclusive) - must be at least 0
     static final int upperBound = 50; // upper bound of values (exclusive)
-    static final long milliseconds = 2000L; // the freeze time upon changes in the graphical representation
+    static long shortWait = 300L; // the freeze time in milliseconds upon changes in the graphical representation
+    static long longWait = 3000L; // the freeze time in milliseconds upon text changes in the graphical representation
     static final int splitCutoff = 5; // in merge sort, if the recursion level has at most this many data points, then insertion sort is used rather than entering another recursion
-
-    // visual settings
     static final int canvasWidth = 800;
-    static final int canvasHeight = 600;
 
     // better leave these alone
-    static final int titleSpace = canvasHeight / 10;
+    static final int canvasHeight = canvasWidth * 3 / 4;
+    static final int titleSpace = canvasHeight / 15;
     static final int offset = canvasWidth / 100;
-    static final int chartWidth = canvasWidth - 5 * offset;
-    static final int chartHeight = canvasHeight - 2 * titleSpace;
+    static final int chartWidth = canvasWidth - 6 * offset;
+    static final int chartHeight = canvasHeight - 3 * titleSpace;
     static final double barWidth = (double) chartWidth / cardinality;
     static final CodeDraw chart = new CodeDraw(canvasWidth, canvasHeight);
 
@@ -35,6 +36,12 @@ public class SortDraw {
 
     public static void main(String[] args) {
 
+        TextFormat textFormat = new TextFormat();
+        textFormat.setFontSize(canvasWidth / 35);
+        chart.setTextFormat(textFormat);
+
+        chart.setTitle("");
+
         Random random = new Random();
         int[] data = new int[cardinality];
         for (int i = 0; i < cardinality; i++) {
@@ -46,7 +53,6 @@ public class SortDraw {
 
             // insertion sort
             case INSERTION -> {
-                chart.setTitle("Insertion Sort");
                 for (int i = 1; i < data.length; i++) {
                     drawChart(data, i, 0, i + 1);
                     for (int j = i; j > 0 && data[j] < data[j - 1]; j--) {
@@ -62,7 +68,6 @@ public class SortDraw {
 
             // selection sort
             case SELECTION -> {
-                chart.setTitle("Selection Sort");
                 for (int i = 0; i < data.length - 1; i++) {
                     drawChart(data, i + 1, i, cardinality);
 
@@ -83,7 +88,6 @@ public class SortDraw {
 
             // bubble sort
             case BUBBLE -> {
-                chart.setTitle("Bubble Sort");
                 for (int i = 0; i < data.length - 1; i++) {
                     drawChart(data, i + 1, 0, cardinality);
                     for (int j = 0; j < data.length - i - 1; j++) {
@@ -101,10 +105,9 @@ public class SortDraw {
 
             // merge sort
             case MERGE -> {
-                chart.setTitle("Merge Sort");
                 int[] help = new int[data.length];
-                mergeSort(data, help, 0, data.length - 1, splitCutoff, 0);
-                chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2., "sorting completed!");
+                mergeSort(data, help, 0, data.length - 1, 0);
+                chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2., "finished sorting!");
                 chart.show();
             }
 
@@ -113,27 +116,27 @@ public class SortDraw {
         }
     }
 
-    private static void mergeSort(int[] data, int[] help, int lo, int hi, int cutoff, int i) {
+    private static void mergeSort(int[] data, int[] help, int lo, int hi, int i) {
         if (hi <= lo) return;
         drawChart(data, i, lo, hi + 1);
         highlightBarGroup(lo, hi - lo + 1);
-        if (hi - lo < cutoff) {
-            chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
-                    "Less than " + (cutoff + 1) + " data points - using insertion sort...");
-            chart.show(milliseconds);
+        if (hi - lo < splitCutoff) {
+            chart.drawText(4 * offset, chartHeight + 2 * titleSpace + 2 * offset,
+                    "Less than " + (splitCutoff + 1) + " data points - using insertion sort...");
+            chart.show(longWait);
             boundedInsertionSort(data, lo, hi);
         } else {
             int mid = lo + (hi - lo) / 2;
-            chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
-                    "More than " + cutoff + " data points - splitting into recursion level " + (i + 1));
-            chart.show(milliseconds);
-            mergeSort(data, help, lo, mid, cutoff, i + 1);
-            mergeSort(data, help, mid + 1, hi, cutoff, i + 1);
+            chart.drawText(4 * offset, chartHeight + 2 * titleSpace + 2 * offset,
+                    "More than " + splitCutoff + " data points - splitting into recursion level " + (i + 1));
+            chart.show(longWait);
+            mergeSort(data, help, lo, mid, i + 1);
+            mergeSort(data, help, mid + 1, hi, i + 1);
             highlightBarGroup(lo, hi - lo + 1);
             merge(data, help, lo, mid, hi);
-            chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+            chart.drawText(4 * offset, chartHeight + 2 * titleSpace + 2 * offset,
                     "Merging recursion level " + (i + 1) + " into level " + i);
-            chart.show(milliseconds);
+            chart.show(longWait);
         }
         drawChart(data, i, lo, hi + 1);
     }
@@ -166,6 +169,9 @@ public class SortDraw {
     }
 
     private static void drawChart(int[] data, int iteration, int lo, int hi) {
+        if (chart.isClosed()){
+            System.exit(143);
+        }
         chart.clear();
         switch (sortMethod) {
             case INSERTION -> chart.drawText(4 * offset, offset, "Insertion Sort");
@@ -186,13 +192,13 @@ public class SortDraw {
             } else if (i == hi) {
                 chart.setColor(Color.gray);
             }
-            int barHeight = (int) ((double) data[i] / upperBound * barMaxHeight + offset);
+            int barHeight = data[i] * barMaxHeight / upperBound + offset;
             chart.fillRectangle(4 * offset + i * barWidth, chartHeight + titleSpace - barHeight, barWidth - 1, barHeight);
         }
         chart.setColor(Color.black);
 
         if (iteration >= data.length) {
-            chart.drawText(4 * offset, chartHeight + titleSpace + offset, "sorting completed!");
+            chart.drawText(4 * offset, chartHeight + titleSpace + offset, "finished sorting!");
         } else {
             switch (sortMethod) {
                 case INSERTION -> {
@@ -202,18 +208,18 @@ public class SortDraw {
                             4 * offset + (iteration + 1) * barWidth, chartHeight + titleSpace + offset);
                     chart.setColor(Color.black);
                     chart.setLineWidth(1);
-                    chart.drawText(4 * offset, chartHeight + titleSpace + offset, "outer loop iteration #" + iteration);
+                    chart.drawText(4 * offset, chartHeight + titleSpace + 4 * offset, "outer loop iteration #" + iteration);
                 }
                 case SELECTION, BUBBLE ->
-                        chart.drawText(4 * offset, chartHeight + titleSpace + offset, "outer loop iteration #" + iteration);
+                        chart.drawText(4 * offset, chartHeight + titleSpace + 4 * offset, "outer loop iteration #" + iteration);
                 case MERGE ->
-                        chart.drawText(4 * offset, chartHeight + titleSpace + offset, "recursion level " + iteration);
+                        chart.drawText(4 * offset, chartHeight + titleSpace + 4 * offset, "recursion level " + iteration);
                 default -> {
                 }
             }
         }
 
-        chart.show(milliseconds);
+        chart.show(shortWait);
     }
 
     private static void highlightBarGroup(int barIndex, int barCount) {
@@ -222,30 +228,30 @@ public class SortDraw {
         chart.drawRectangle(4 * offset + barIndex * barWidth, titleSpace, barCount * barWidth, chartHeight);
         chart.setColor(Color.black);
         chart.setLineWidth(1);
-        chart.show(milliseconds);
+        chart.show(shortWait);
     }
 
     private static void endOfIterationText(int iteration) {
         switch (sortMethod) {
             case INSERTION -> {
-                chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                chart.drawText(4 * offset, chartHeight + 2 * titleSpace + 2 * offset,
                         "Data locally sorted up to marker - starting next iteration...");
             }
             case SELECTION -> {
                 if (iteration == 1) {
-                    chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                    chart.drawText(4 * offset, chartHeight + 2 * titleSpace + 2 * offset,
                             "The first entry is globally sorted - starting next iteration...");
                 } else {
-                    chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                    chart.drawText(4 * offset, chartHeight + 2 * titleSpace + 2 * offset,
                             "The first " + iteration + " entries are globally sorted - starting next iteration...");
                 }
             }
             case BUBBLE -> {
                 if (iteration == 1) {
-                    chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2.,
+                    chart.drawText(4 * offset, chartHeight + 2 * titleSpace + 2 * offset,
                             "The last entry is globally sorted - starting next iteration...");
                 } else {
-                    chart.drawText(4 * offset, chartHeight + titleSpace + titleSpace / 2,
+                    chart.drawText(4 * offset, chartHeight + 2 * titleSpace + 2 * offset,
                             "The last " + iteration + " entries are globally sorted - starting next iteration...");
                 }
             }
@@ -253,7 +259,7 @@ public class SortDraw {
             }
         }
 
-        chart.show(milliseconds * 2);
+        chart.show(longWait);
     }
 
 }

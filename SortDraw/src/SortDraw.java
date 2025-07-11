@@ -11,11 +11,11 @@ public class SortDraw {
     // main settings
     static final SortMethod sortMethod = SortMethod.MERGE; // choose from INSERTION, SELECTION, BUBBLE and MERGE
     static final int cardinality = 31; // amount of data points to be sorted - recommended range is [10, 100]
-    static final int lowerBound = 1; // lower bound of values (inclusive) - must be at least 0
-    static final int upperBound = 50; // upper bound of values (exclusive)
-    static long shortWait = 500L; // the freeze time in milliseconds upon changes in the graphical representation
-    static long longWait = 3000L; // the freeze time in milliseconds upon text changes in the graphical representation
-    static final boolean showMerge = true; // if set true, then the merge step in merge sort will be shown in detail in a second canvas
+    static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
+    static final int upperBound = 50; // upper bound of values (exclusive) - must be greater than lowerBound
+    static long shortWait = 500L; // the freeze time in milliseconds upon changes in the graphical representation - recommended range is [300, 1000]
+    static long longWait = 3000L; // the freeze time in milliseconds upon text changes in the graphical representation - recommended range is [2000, 4000]
+    static final boolean showMerge = true; // if set true, then the merge steps in merge sort will be shown in detail in a second canvas
     static final int splitCutoff = 5; // in merge sort, if the recursion level has at most this many data points, then insertion sort is used rather than entering another recursion
     static final int canvasWidth = 800;
 
@@ -165,14 +165,11 @@ public class SortDraw {
         for (int k = lo; k <= hi; k++) {
             if (i > mid) {
                 data[k] = help[j++];
-            }
-            else if (j > hi) {
+            } else if (j > hi) {
                 data[k] = help[i++];
-            }
-            else if (help[j] < help[i]) {
+            } else if (help[j] < help[i]) {
                 data[k] = help[j++];
-            }
-            else {
+            } else {
                 data[k] = help[i++];
             }
         }
@@ -185,39 +182,33 @@ public class SortDraw {
         mergeChart.setTextFormat(textFormat);
         mergeChart.setTitle("");
 
-        int[] left = Arrays.copyOfRange(data, lo, mid + 1);
-        int[] right = Arrays.copyOfRange(data, mid + 1, hi + 1);
         int[] result = new int[hi - lo + 1];
-        Arrays.fill(result, -1);
-        drawMerge(mergeChart, left, right, result, recursion);
 
         for (int k = lo; k <= hi; k++) {
             help[k] = data[k];
         }
+        drawMerge(mergeChart, Arrays.copyOfRange(data, lo, hi + 1), Arrays.copyOfRange(help, lo, hi + 1), recursion);
         int i = lo, j = mid + 1;
         for (int k = lo; k <= hi; k++) {
-            if (mergeChart.isClosed()){
+            if (mergeChart.isClosed()) {
                 merge(data, help, lo, mid, hi);
                 return;
             }
             if (i > mid) {
-                right[j - mid - 1] = -1;
-                data[k] = help[j++];
+                data[k] = help[j];
+                help[j++] = 0;
                 mergeChart.drawText(2 * offset, primaryTextY, "Take from right...");
-            }
-            else if (j > hi) {
-                left[i - lo] = -1;
-                data[k] = help[i++];
+            } else if (j > hi) {
+                data[k] = help[i];
+                help[i++] = 0;
                 mergeChart.drawText(2 * offset, primaryTextY, "Take from left...");
-            }
-            else if (help[j] < help[i]) {
-                right[j - mid - 1] = -1;
-                data[k] = help[j++];
+            } else if (help[j] < help[i]) {
+                data[k] = help[j];
+                help[j++] = 0;
                 mergeChart.drawText(2 * offset, primaryTextY, "Take from right...");
-            }
-            else {
-                left[i - lo] = -1;
-                data[k] = help[i++];
+            } else {
+                data[k] = help[i];
+                help[i++] = 0;
                 mergeChart.drawText(2 * offset, primaryTextY, "Take from left...");
             }
             mergeChart.setColor(Color.red);
@@ -227,47 +218,11 @@ public class SortDraw {
             mergeChart.setLineWidth(1);
             result[k - lo] = data[k];
             mergeChart.show(longWait);
-            drawMerge(mergeChart, left, right, result, recursion);
+            drawMerge(mergeChart, Arrays.copyOfRange(data, lo, hi + 1), Arrays.copyOfRange(help, lo, hi + 1), recursion);
         }
         mergeChart.drawText(2 * offset, primaryTextY, "Merge completed!");
         mergeChart.show(longWait);
         mergeChart.close();
-    }
-
-    private static void drawMerge(CodeDraw mergeChart, int[] left, int[] right, int[] result, int recursion){
-        mergeChart.clear();
-        mergeChart.setColor(Color.black);
-        mergeChart.drawText(2 * offset, offset, "Merging recursion level " + (recursion + 1) + " into level " + recursion);
-
-        double halfWidth = chartWidth / 2 - offset;
-        mergeChart.drawRectangle(2 * offset, titleSpace, halfWidth, chartHeight / 2.);
-        mergeChart.drawRectangle(3 * offset + chartWidth / 2., titleSpace, halfWidth, chartHeight / 2.);
-        mergeChart.drawRectangle(2 * offset, titleSpace + offset + chartHeight / 2., chartWidth, chartHeight / 2.);
-
-
-        double barMaxHeight = chartHeight / 2;
-        double barWidth = halfWidth / left.length;
-        for (int i = 0; i < left.length; i++) {
-            if (left[i] == -1) continue;
-            double barHeight = left[i] * barMaxHeight / (upperBound - 1);
-            mergeChart.fillRectangle(2 * offset + i * barWidth, chartHeight / 2. + titleSpace - barHeight, barWidth - 1, barHeight);
-            mergeChart.setColor(Color.gray);
-        }
-        mergeChart.setColor(Color.black);
-        for (int i = 0; i < right.length; i++) {
-            if (right[i] == -1) continue;
-            double barHeight = right[i] * barMaxHeight / (upperBound - 1);
-            mergeChart.fillRectangle(3 * offset + i * barWidth + chartWidth / 2., chartHeight / 2. + titleSpace - barHeight, barWidth - 1, barHeight);
-            mergeChart.setColor(Color.gray);
-        }
-        mergeChart.setColor(Color.black);
-        barWidth = chartWidth / result.length;
-        for (int i = 0; i < result.length; i++) {
-            if (result[i] == -1) break;
-            double barHeight = result[i] * barMaxHeight / (upperBound - 1);
-            mergeChart.fillRectangle(2 * offset + i * barWidth, chartHeight + titleSpace - barHeight + offset, barWidth - 1, barHeight);
-        }
-
     }
 
     private static void boundedInsertionSort(int[] data, int lo, int hi) {
@@ -285,7 +240,7 @@ public class SortDraw {
     }
 
     private static void drawChart(int[] data, int iteration, int lo, int hi) {
-        if (chart.isClosed()){
+        if (chart.isClosed()) {
             System.exit(143);
         }
         chart.clear();
@@ -301,7 +256,6 @@ public class SortDraw {
 
         chart.drawRectangle(4 * offset, titleSpace, chartWidth, chartHeight);
 
-        double barMaxHeight = chartHeight - offset;
         chart.setColor(Color.gray);
         for (int i = 0; i < data.length; i++) {
             if (i == lo) {
@@ -309,7 +263,7 @@ public class SortDraw {
             } else if (i == hi) {
                 chart.setColor(Color.gray);
             }
-            double barHeight = data[i] * barMaxHeight / (upperBound - 1);
+            double barHeight = data[i] * chartHeight / (upperBound - 1);
             chart.fillRectangle(4 * offset + i * barWidth, chartHeight + titleSpace - barHeight, barWidth - 1, barHeight);
         }
         chart.setColor(Color.black);
@@ -329,14 +283,57 @@ public class SortDraw {
                 }
                 case SELECTION, BUBBLE ->
                         chart.drawText(4 * offset, primaryTextY, "outer loop iteration #" + iteration);
-                case MERGE ->
-                        chart.drawText(4 * offset, primaryTextY, "recursion level " + iteration);
+                case MERGE -> chart.drawText(4 * offset, primaryTextY, "recursion level " + iteration);
                 default -> {
                 }
             }
         }
 
         chart.show(shortWait);
+    }
+
+    private static void drawMerge(CodeDraw mergeChart, int[] data, int[] help, int recursion) {
+        mergeChart.clear();
+        mergeChart.setColor(Color.black);
+        mergeChart.drawText(2 * offset, offset, "Merging recursion level " + (recursion + 1) + " into level " + recursion);
+
+        double halfWidth = chartWidth / 2 - offset;
+        mergeChart.drawRectangle(2 * offset, titleSpace, halfWidth, chartHeight / 2.);
+        mergeChart.drawRectangle(3 * offset + chartWidth / 2., titleSpace, halfWidth, chartHeight / 2.);
+        mergeChart.drawRectangle(2 * offset, titleSpace + offset + chartHeight / 2., chartWidth, chartHeight / 2.);
+
+        double barWidth = halfWidth / Math.ceil(help.length / 2.);
+        int i = 0;
+        int correctPositions = 0;
+        for (; i < help.length / 2.; i++) {
+            if (help[i] == 0) {
+                correctPositions++;
+                continue;
+            }
+            double barHeight = help[i] * chartHeight / 2 / (upperBound - 1);
+            mergeChart.fillRectangle(2 * offset + i * barWidth, chartHeight / 2. + titleSpace - barHeight, barWidth - 1, barHeight);
+            mergeChart.setColor(Color.gray);
+        }
+        mergeChart.setColor(Color.black);
+        for (; i < help.length; i++) {
+            if (help[i] == 0) {
+                correctPositions++;
+                continue;
+            }
+            double barHeight = help[i] * chartHeight / 2 / (upperBound - 1);
+            mergeChart.fillRectangle(4 * offset + i * barWidth, chartHeight / 2. + titleSpace - barHeight, barWidth - 1, barHeight);
+            mergeChart.setColor(Color.gray);
+        }
+        mergeChart.setColor(Color.black);
+        barWidth = chartWidth / data.length;
+        for (int j = 0; j < data.length; j++) {
+            if (j == correctPositions){
+                mergeChart.setColor(Color.lightGray);
+            }
+            double barHeight = data[j] * chartHeight / 2 / (upperBound - 1);
+            mergeChart.fillRectangle(2 * offset + j * barWidth, chartHeight + titleSpace - barHeight + offset, barWidth - 1, barHeight);
+        }
+        mergeChart.setColor(Color.black);
     }
 
     private static void highlightBarGroup(int barIndex, int barCount) {

@@ -52,7 +52,6 @@ public class SortDraw {
         for (int i = 0; i < cardinality; i++) {
             data[i] = random.nextInt(lowerBound, upperBound);
         }
-        //int[] data = random.ints(cardinality, lowerBound, upperBound).toArray();
 
         switch (sortMethod) {
 
@@ -112,7 +111,7 @@ public class SortDraw {
             case MERGE -> {
                 int[] help = new int[data.length];
                 mergeSort(data, help, 0, data.length - 1, 0);
-                chart.drawText(4 * offset, secondaryTextY, "finished sorting!");
+                chart.drawText(4 * offset, secondaryTextY, "Finished sorting!");
                 chart.show();
             }
 
@@ -182,43 +181,44 @@ public class SortDraw {
         mergeChart.setTextFormat(textFormat);
         mergeChart.setTitle("");
 
-        int[] result = new int[hi - lo + 1];
-
         for (int k = lo; k <= hi; k++) {
             help[k] = data[k];
         }
-        drawMerge(mergeChart, Arrays.copyOfRange(data, lo, hi + 1), Arrays.copyOfRange(help, lo, hi + 1), recursion);
+
+        drawMerge(mergeChart, Arrays.copyOfRange(data, lo, hi + 1), Arrays.copyOfRange(help, lo, hi + 1), 0, 0, recursion);
+
         int i = lo, j = mid + 1;
         for (int k = lo; k <= hi; k++) {
+            // if the merge chart is closed manually, data is reset to a consistent state, and normal merge is called instead
             if (mergeChart.isClosed()) {
+                for (int l = lo; l <= hi; l++) {
+                    data[l] = help[l];
+                }
                 merge(data, help, lo, mid, hi);
                 return;
             }
+            String text = "";
             if (i > mid) {
-                data[k] = help[j];
-                help[j++] = 0;
-                mergeChart.drawText(2 * offset, primaryTextY, "Take from right...");
+                data[k] = help[j++];
+                text = "Take from right...";
             } else if (j > hi) {
-                data[k] = help[i];
-                help[i++] = 0;
-                mergeChart.drawText(2 * offset, primaryTextY, "Take from left...");
+                data[k] = help[i++];
+                text = "Take from left...";
             } else if (help[j] < help[i]) {
-                data[k] = help[j];
-                help[j++] = 0;
-                mergeChart.drawText(2 * offset, primaryTextY, "Take from right...");
+                data[k] = help[j++];
+                text = "Take from right...";
             } else {
-                data[k] = help[i];
-                help[i++] = 0;
-                mergeChart.drawText(2 * offset, primaryTextY, "Take from left...");
+                data[k] = help[i++];
+                text = "Take from left...";
             }
+            mergeChart.drawText(2 * offset, primaryTextY, text);
             mergeChart.setColor(Color.red);
             mergeChart.setLineWidth(3);
             mergeChart.drawLine(2 * offset, chartHeight / 2 + titleSpace - (data[k] * chartHeight / 2 / (upperBound - 1)),
                     2 * offset + chartWidth, chartHeight / 2 + titleSpace - (data[k] * chartHeight / 2 / (upperBound - 1)));
             mergeChart.setLineWidth(1);
-            result[k - lo] = data[k];
             mergeChart.show(longWait);
-            drawMerge(mergeChart, Arrays.copyOfRange(data, lo, hi + 1), Arrays.copyOfRange(help, lo, hi + 1), recursion);
+            drawMerge(mergeChart, Arrays.copyOfRange(data, lo, hi + 1), Arrays.copyOfRange(help, lo, hi + 1), i-lo, j-mid-1, recursion);
         }
         mergeChart.drawText(2 * offset, primaryTextY, "Merge completed!");
         mergeChart.show(longWait);
@@ -268,8 +268,9 @@ public class SortDraw {
         }
         chart.setColor(Color.black);
 
+        String text = "";
         if (iteration >= data.length) {
-            chart.drawText(4 * offset, primaryTextY, "finished sorting!");
+            text = "Finished sorting!";
         } else {
             switch (sortMethod) {
                 case INSERTION -> {
@@ -279,20 +280,19 @@ public class SortDraw {
                             4 * offset + (iteration + 1) * barWidth, chartHeight + titleSpace + offset);
                     chart.setColor(Color.black);
                     chart.setLineWidth(1);
-                    chart.drawText(4 * offset, primaryTextY, "outer loop iteration #" + iteration);
+                    text = "Outer loop iteration #" + iteration;
                 }
-                case SELECTION, BUBBLE ->
-                        chart.drawText(4 * offset, primaryTextY, "outer loop iteration #" + iteration);
-                case MERGE -> chart.drawText(4 * offset, primaryTextY, "recursion level " + iteration);
+                case SELECTION, BUBBLE -> text = "Outer loop iteration #" + iteration;
+                case MERGE -> text = "Recursion level " + iteration;
                 default -> {
                 }
             }
         }
-
+        chart.drawText(4 * offset, primaryTextY, text);
         chart.show(shortWait);
     }
 
-    private static void drawMerge(CodeDraw mergeChart, int[] data, int[] help, int recursion) {
+    private static void drawMerge(CodeDraw mergeChart, int[] data, int[] help, int left, int right, int recursion) {
         mergeChart.clear();
         mergeChart.setColor(Color.black);
         mergeChart.drawText(2 * offset, offset, "Merging recursion level " + (recursion + 1) + " into level " + recursion);
@@ -303,22 +303,19 @@ public class SortDraw {
         mergeChart.drawRectangle(2 * offset, titleSpace + offset + chartHeight / 2., chartWidth, chartHeight / 2.);
 
         double barWidth = halfWidth / Math.ceil(help.length / 2.);
+        mergeChart.setColor(Color.gray);
         int i = 0;
-        int correctPositions = 0;
         for (; i < help.length / 2.; i++) {
-            if (help[i] == 0) {
-                correctPositions++;
-                continue;
+            if (i == left){
+                mergeChart.setColor(Color.black);
             }
             double barHeight = help[i] * chartHeight / 2 / (upperBound - 1);
             mergeChart.fillRectangle(2 * offset + i * barWidth, chartHeight / 2. + titleSpace - barHeight, barWidth - 1, barHeight);
             mergeChart.setColor(Color.gray);
         }
-        mergeChart.setColor(Color.black);
         for (; i < help.length; i++) {
-            if (help[i] == 0) {
-                correctPositions++;
-                continue;
+            if (i == (int) Math.ceil(help.length / 2.) + right){
+                mergeChart.setColor(Color.black);
             }
             double barHeight = help[i] * chartHeight / 2 / (upperBound - 1);
             mergeChart.fillRectangle(4 * offset + i * barWidth, chartHeight / 2. + titleSpace - barHeight, barWidth - 1, barHeight);
@@ -327,8 +324,8 @@ public class SortDraw {
         mergeChart.setColor(Color.black);
         barWidth = chartWidth / data.length;
         for (int j = 0; j < data.length; j++) {
-            if (j == correctPositions){
-                mergeChart.setColor(Color.lightGray);
+            if (j == left + right){
+                mergeChart.setColor(Color.gray);
             }
             double barHeight = data[j] * chartHeight / 2 / (upperBound - 1);
             mergeChart.fillRectangle(2 * offset + j * barWidth, chartHeight + titleSpace - barHeight + offset, barWidth - 1, barHeight);
@@ -346,33 +343,29 @@ public class SortDraw {
     }
 
     private static void endOfIterationText(int iteration) {
+        String text = "";
         switch (sortMethod) {
             case INSERTION -> {
-                chart.drawText(4 * offset, secondaryTextY,
-                        "Data locally sorted up to marker - starting next iteration...");
+                text = "Data locally sorted up to marker - starting next iteration...";
             }
             case SELECTION -> {
                 if (iteration == 1) {
-                    chart.drawText(4 * offset, secondaryTextY,
-                            "The first entry is globally sorted - starting next iteration...");
+                    text = "The first entry is globally sorted - starting next iteration...";
                 } else {
-                    chart.drawText(4 * offset, secondaryTextY,
-                            "The first " + iteration + " entries are globally sorted - starting next iteration...");
+                    text = "The first " + iteration + " entries are globally sorted - starting next iteration...";
                 }
             }
             case BUBBLE -> {
                 if (iteration == 1) {
-                    chart.drawText(4 * offset, secondaryTextY,
-                            "The last entry is globally sorted - starting next iteration...");
+                    text = "The last entry is globally sorted - starting next iteration...";
                 } else {
-                    chart.drawText(4 * offset, secondaryTextY,
-                            "The last " + iteration + " entries are globally sorted - starting next iteration...");
+                    text = "The last " + iteration + " entries are globally sorted - starting next iteration...";
                 }
             }
             default -> {
             }
         }
-
+        chart.drawText(4 * offset, secondaryTextY, text);
         chart.show(longWait);
     }
 

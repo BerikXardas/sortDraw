@@ -4,17 +4,18 @@ import codedraw.TextOrigin;
 
 import java.awt.*;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public class SortDraw {
 
     // main settings
-    static final SortMethod sortMethod = SortMethod.MERGE; // choose from INSERTION, SELECTION, BUBBLE and MERGE
+    static final SortMethod sortMethod = SortMethod.QUICK; // choose from INSERTION, SELECTION, BUBBLE, MERGE and QUICK
     static final int cardinality = 14; // amount of data points to be sorted - recommended range is [10, 100]
     static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
     static final int upperBound = 50; // upper bound of values (exclusive) - must be greater than lowerBound
-    static long shortWait = 30L; // the freeze time in milliseconds upon changes in the graphical representation - recommended range is [300, 1000]
-    static long longWait = 900L; // the freeze time in milliseconds upon text changes in the graphical representation - recommended range is [2000, 4000]
+    static long shortWait = 500L; // the freeze time in milliseconds upon changes in the graphical representation - recommended range is [300, 1000]
+    static long longWait = 2000L; // the freeze time in milliseconds upon text changes in the graphical representation - recommended range is [2000, 4000]
     static final boolean showMerge = true; // if set true, then the merge steps in merge sort will be shown in detail in a second canvas
     static final int splitCutoff = 5; // in merge sort, if the recursion level has at most this many data points, then insertion sort is used rather than entering another recursion
     static final int canvasWidth = 800;
@@ -36,7 +37,8 @@ public class SortDraw {
         INSERTION,
         SELECTION,
         BUBBLE,
-        MERGE
+        MERGE,
+        QUICK
     }
 
     public static void main(String[] args) {
@@ -111,6 +113,14 @@ public class SortDraw {
             case MERGE -> {
                 int[] help = new int[data.length];
                 mergeSort(data, help, 0, data.length - 1, 0);
+                chart.drawText(4 * offset, secondaryTextY, "Finished sorting!");
+                chart.show();
+            }
+
+            // quick sort
+            case QUICK -> {
+                quickSort(data, 0 ,data.length - 1, 0);
+                drawChart(data, 0, 0, cardinality + 1);
                 chart.drawText(4 * offset, secondaryTextY, "Finished sorting!");
                 chart.show();
             }
@@ -240,6 +250,47 @@ public class SortDraw {
         data[j] = swap;
     }
 
+    private static void quickSort(int[] data, int lo, int hi, int i) {
+        if (hi <= lo) {
+            hi = lo;
+            drawChart(data, i, lo, hi + 1);
+            chart.drawText(4 * offset, secondaryTextY, "Base case reached");
+            chart.show(longWait);
+            return;
+        }
+        int j = partition(data, lo, hi, i);
+        drawChart(data, i, lo, hi + 1);
+        highlightBarGroup(j, 1);
+        chart.drawText(4 * offset, secondaryTextY, "Pivot on correct place - continue sorting the left side");
+        chart.show(longWait);
+        quickSort (data, lo, j - 1, i + 1);
+        drawChart(data, i, lo, hi + 1);
+        highlightBarGroup(j, 1);
+        chart.drawText(4 * offset, secondaryTextY, "Left part is sorted - continue sorting the right side");
+        chart.show(longWait);
+        quickSort (data, j + 1, hi, i + 1);
+    }
+
+    private static int partition(int[] data, int lo, int hi, int i) {
+        int k = lo;
+        int v = data[hi];
+        drawChart(data, i, lo, hi + 1);
+        highlightBarGroup(hi, 1);
+        chart.drawText(4 * offset, secondaryTextY, "Pivot found - aligning elements less than pivot on the left...");
+        chart.show(longWait);
+        for (int j = k; j < hi; j++) {
+            if (data[j] < v) {
+                exchange(data, j, k++);
+            }
+        }
+        drawChart(data, i, lo, hi + 1);
+        chart.drawText(4 * offset, secondaryTextY, "Putting Pivot on its right place.");
+        highlightBarGroup(hi, 1);
+        highlightBarGroup(k, 1);
+        exchange(data, k, hi);
+        return k;
+    }
+
     private static void drawChart(int[] data, int iteration, int lo, int hi) {
         if (chart.isClosed()) {
             System.exit(143);
@@ -251,6 +302,7 @@ public class SortDraw {
             case SELECTION -> chart.drawText(4 * offset, offset, "Selection Sort");
             case BUBBLE -> chart.drawText(4 * offset, offset, "Bubble Sort");
             case MERGE -> chart.drawText(4 * offset, offset, "Merge Sort");
+            case QUICK -> chart.drawText(4 * offset, offset, "Quick Sort");
             default -> {
             }
         }
@@ -270,7 +322,7 @@ public class SortDraw {
         chart.setColor(Color.black);
 
         String text = "";
-        if (iteration >= data.length) {
+        if (iteration >= data.length && sortMethod.ordinal() < 3) {
             text = "Finished sorting!";
         } else {
             switch (sortMethod) {
@@ -284,7 +336,7 @@ public class SortDraw {
                     text = "Outer loop iteration #" + iteration;
                 }
                 case SELECTION, BUBBLE -> text = "Outer loop iteration #" + iteration;
-                case MERGE -> text = "Recursion level " + iteration;
+                case MERGE, QUICK -> text = "Recursion level " + iteration;
                 default -> {
                 }
             }

@@ -13,7 +13,7 @@ public class SortDraw {
     static final int cardinality = 31; // amount of data points to be sorted - recommended range is [10, 100]
     static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
     static final int upperBound = 50; // upper bound of values (exclusive) - must be greater than lowerBound
-    static long shortWait = 500L; // the freeze time in milliseconds upon changes in the graphical representation - recommended range is [300, 1000]
+    static long shortWait = 5L; // the freeze time in milliseconds upon changes in the graphical representation - recommended range is [300, 1000]
     static long longWait = 3000L; // the freeze time in milliseconds upon text changes in the graphical representation - recommended range is [2000, 4000]
     static final boolean showMerge = true; // if set true, then the merge steps in merge sort will be shown in detail in a second canvas
     static final int splitCutoff = 5; // in merge sort, if the recursion level has at most this many data points, then insertion sort is used rather than entering another recursion
@@ -301,6 +301,9 @@ public class SortDraw {
         mergeChart.drawRectangle(2 * offset, titleSpace, halfWidth, chartHeight / 2.);
         mergeChart.drawRectangle(3 * offset + chartWidth / 2., titleSpace, halfWidth, chartHeight / 2.);
         mergeChart.drawRectangle(2 * offset, titleSpace + offset + chartHeight / 2., chartWidth, chartHeight / 2.);
+        mergeChart.drawText(3 * offset, titleSpace + offset, "help (left half)");
+        mergeChart.drawText(4 * offset + chartWidth / 2., titleSpace + offset, "help (right half)");
+        mergeChart.drawText(3 * offset, titleSpace + 2 * offset + chartHeight / 2., "data");
 
         double barWidth = halfWidth / Math.ceil(help.length / 2.);
         mergeChart.setColor(Color.gray);

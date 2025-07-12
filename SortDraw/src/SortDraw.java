@@ -11,10 +11,10 @@ public class SortDraw {
     // main settings
     static final SortMethod sortMethod = SortMethod.MERGE; // choose from INSERTION, SELECTION, BUBBLE and MERGE
     static final int cardinality = 31; // amount of data points to be sorted - recommended range is [10, 100]
-    static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
+    static final int lowerBound = 44; // lower bound of values (inclusive) - must be greater than 0
     static final int upperBound = 50; // upper bound of values (exclusive) - must be greater than lowerBound
-    static long shortWait = 5L; // the freeze time in milliseconds upon changes in the graphical representation - recommended range is [300, 1000]
-    static long longWait = 3000L; // the freeze time in milliseconds upon text changes in the graphical representation - recommended range is [2000, 4000]
+    static long shortWait = 300L; // the freeze time in milliseconds upon changes in the graphical representation - recommended range is [300, 1000]
+    static long longWait = 2000L; // the freeze time in milliseconds upon text changes in the graphical representation - recommended range is [2000, 4000]
     static final boolean showMerge = true; // if set true, then the merge steps in merge sort will be shown in detail in a second canvas
     static final int splitCutoff = 5; // in merge sort, if the recursion level has at most this many data points, then insertion sort is used rather than entering another recursion
     static final int canvasWidth = 800;
@@ -214,8 +214,8 @@ public class SortDraw {
             mergeChart.drawText(2 * offset, primaryTextY, text);
             mergeChart.setColor(Color.red);
             mergeChart.setLineWidth(3);
-            mergeChart.drawLine(2 * offset, chartHeight / 2 + titleSpace - (data[k] * chartHeight / 2 / (upperBound - 1)),
-                    2 * offset + chartWidth, chartHeight / 2 + titleSpace - (data[k] * chartHeight / 2 / (upperBound - 1)));
+            mergeChart.drawLine(2 * offset, chartHeight / 2 + titleSpace - (data[k] * chartHeight / 2 / (upperBound - 1) - titleSpace),
+                    2 * offset + chartWidth, chartHeight / 2 + titleSpace - (data[k] * chartHeight / 2 / (upperBound - 1) - titleSpace));
             mergeChart.setLineWidth(1);
             mergeChart.show(longWait);
             drawMerge(mergeChart, Arrays.copyOfRange(data, lo, hi + 1), Arrays.copyOfRange(help, lo, hi + 1), i-lo, j-mid-1, recursion);
@@ -301,9 +301,6 @@ public class SortDraw {
         mergeChart.drawRectangle(2 * offset, titleSpace, halfWidth, chartHeight / 2.);
         mergeChart.drawRectangle(3 * offset + chartWidth / 2., titleSpace, halfWidth, chartHeight / 2.);
         mergeChart.drawRectangle(2 * offset, titleSpace + offset + chartHeight / 2., chartWidth, chartHeight / 2.);
-        mergeChart.drawText(3 * offset, titleSpace + offset, "help (left half)");
-        mergeChart.drawText(4 * offset + chartWidth / 2., titleSpace + offset, "help (right half)");
-        mergeChart.drawText(3 * offset, titleSpace + 2 * offset + chartHeight / 2., "data");
 
         double barWidth = halfWidth / Math.ceil(help.length / 2.);
         mergeChart.setColor(Color.gray);
@@ -312,7 +309,7 @@ public class SortDraw {
             if (i == left){
                 mergeChart.setColor(Color.black);
             }
-            double barHeight = help[i] * chartHeight / 2 / (upperBound - 1);
+            double barHeight = help[i] * chartHeight / 2 / (upperBound - 1) - titleSpace;
             mergeChart.fillRectangle(2 * offset + i * barWidth, chartHeight / 2. + titleSpace - barHeight, barWidth - 1, barHeight);
             mergeChart.setColor(Color.gray);
         }
@@ -320,7 +317,7 @@ public class SortDraw {
             if (i == (int) Math.ceil(help.length / 2.) + right){
                 mergeChart.setColor(Color.black);
             }
-            double barHeight = help[i] * chartHeight / 2 / (upperBound - 1);
+            double barHeight = help[i] * chartHeight / 2 / (upperBound - 1) - titleSpace;
             mergeChart.fillRectangle(4 * offset + i * barWidth, chartHeight / 2. + titleSpace - barHeight, barWidth - 1, barHeight);
             mergeChart.setColor(Color.gray);
         }
@@ -330,9 +327,13 @@ public class SortDraw {
             if (j == left + right){
                 mergeChart.setColor(Color.gray);
             }
-            double barHeight = data[j] * chartHeight / 2 / (upperBound - 1);
+            double barHeight = data[j] * chartHeight / 2 / (upperBound - 1) - titleSpace;
             mergeChart.fillRectangle(2 * offset + j * barWidth, chartHeight + titleSpace - barHeight + offset, barWidth - 1, barHeight);
         }
+        mergeChart.setColor(Color.black);
+        mergeChart.drawText(3 * offset, titleSpace + offset, "help (left half)");
+        mergeChart.drawText(4 * offset + chartWidth / 2., titleSpace + offset, "help (right half)");
+        mergeChart.drawText(3 * offset, titleSpace + 2 * offset + chartHeight / 2., "data");
         mergeChart.setColor(Color.black);
     }
 

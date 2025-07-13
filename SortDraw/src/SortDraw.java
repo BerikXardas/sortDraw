@@ -8,14 +8,14 @@ import java.util.Random;
 public class SortDraw {
 
     // main settings
-    static final SortMethod sortMethod = SortMethod.QUICK; // choose from INSERTION, SELECTION, BUBBLE, MERGE and QUICK
-    static final int cardinality = 17; // amount of data points to be sorted - recommended range is [10, 100]
+    static final SortMethod sortMethod = SortMethod.MERGE; // choose from INSERTION, SELECTION, BUBBLE, MERGE and QUICK
+    static final int cardinality = 17; // number of data points to be sorted - recommended range is [10, 100]
     static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
     static final int upperBound = 50; // upper bound of values (exclusive) - must be greater than lowerBound
-    static long shortWait = 400L; // the freeze time in milliseconds upon minor changes in the graphical representation - recommended range is [300, 1000]
-    static long longWait = 3000L; // the freeze time in milliseconds upon major changes in the graphical representation - recommended range is [2000, 4000]
+    static final long shortWait = 400L; // the freeze time in milliseconds upon minor changes in the graphical representation - recommended range is [300, 1000]
+    static final long longWait = 3000L; // the freeze time in milliseconds upon major changes in the graphical representation - recommended range is [2000, 4000]
     static final int splitCutoff = 5; // in merge sort and quick sort, if the recursion level has at most this many data points, then insertion sort is used rather than entering another recursion
-    static final boolean showMerge = true; // if set true, then the merge steps in merge sort will be shown in detail in a second canvas
+    static final boolean showMerge = true; // if set true, then the merge steps in merge sort will be shown in detail on a second canvas
     static final boolean showPartition = true; // if set true, then the partition exchanges in quick sort will be shown in detail
     static final int canvasWidth = 800;
 
@@ -30,7 +30,6 @@ public class SortDraw {
     static final double secondaryTextY = chartHeight + 2 * titleSpace + 2 * offset;
     static final CodeDraw chart = new CodeDraw(canvasWidth, canvasHeight);
     static final TextFormat textFormat = new TextFormat();
-
 
     private enum SortMethod {
         INSERTION,
@@ -274,7 +273,7 @@ public class SortDraw {
         chart.show(longWait);
         quickSort(data, j + 1, hi, recursion + 1);
         drawChart(data, recursion, lo, hi + 1, j);
-        chart.drawText(4 * offset, secondaryTextY, "Left and right parts sorted - returning to recursion level " + (recursion - 1));
+        chart.drawText(4 * offset, secondaryTextY, "Left and right part sorted - returning to recursion level " + (recursion - 1));
         chart.show(longWait);
     }
 

@@ -8,35 +8,38 @@ import java.util.Random;
 public class SortDraw {
 
     // main settings
-    static final SortMethod sortMethod = SortMethod.MERGE; // choose from INSERTION, SELECTION, BUBBLE, MERGE and QUICK
-    static final int cardinality = 17; // number of data points to be sorted - recommended range is [10, 100]
-    static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
-    static final int upperBound = 50; // upper bound of values (exclusive) - must be greater than lowerBound
-    static final long shortWait = 400L; // the freeze time in milliseconds upon minor changes in the graphical representation - recommended range is [300, 1000]
-    static final long longWait = 3000L; // the freeze time in milliseconds upon major changes in the graphical representation - recommended range is [2000, 4000]
-    static final int splitCutoff = 5; // in merge sort and quick sort, if the recursion level has at most this many data points, then insertion sort is used rather than entering another recursion
-    static final boolean showMerge = true; // if set true, then the merge steps in merge sort will be shown in detail on a second canvas
-    static final boolean showPartition = true; // if set true, then the partition exchanges in quick sort will be shown in detail
-    static final int canvasWidth = 800;
+    private static final SortMethod sortMethod = SortMethod.BINARY; // choose from INSERTION, SELECTION, BUBBLE, MERGE, QUICK (sort) or LINEAR, BINARY (search)
+    private static final int cardinality = 29; // number of data points to be sorted - recommended range is [10, 100]
+    private static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
+    private static final int upperBound = 35; // upper bound of values (exclusive) - must be greater than lowerBound
+    private static final long shortWait = 400L; // the freeze time in milliseconds upon minor changes in the graphical representation - recommended range is [300, 1000]
+    private static final long longWait = 3000L; // the freeze time in milliseconds upon major changes in the graphical representation - recommended range is [2000, 4000]
+    private static final int splitCutoff = 5; // in merge sort and quick sort, if the recursion level has at most this many data points, then insertion sort is used rather than a recursive call
+    private static final boolean showMerge = true; // if set true, then the merge steps in merge sort will be shown in detail on a second canvas
+    private static final boolean showPartition = true; // if set true, then the partition exchanges in quick sort will be shown in detail
+    private static int searchValue = 0; // the value to be found in linear or binary search - will be set to a random number within range if less than 1
+    private static final int canvasWidth = 800;
 
     // better leave these alone
-    static final int canvasHeight = canvasWidth * 3 / 4;
-    static final double titleSpace = canvasHeight / 15.;
-    static final double offset = canvasWidth / 100.;
-    static final double chartWidth = canvasWidth - 6 * offset;
-    static final double chartHeight = canvasHeight - 3 * titleSpace;
-    static final double barWidth = chartWidth / cardinality;
-    static final double primaryTextY = chartHeight + titleSpace + 4 * offset;
-    static final double secondaryTextY = chartHeight + 2 * titleSpace + 2 * offset;
-    static final CodeDraw chart = new CodeDraw(canvasWidth, canvasHeight);
-    static final TextFormat textFormat = new TextFormat();
+    private static final int canvasHeight = canvasWidth * 3 / 4;
+    private static final double titleSpace = canvasHeight / 15.;
+    private static final double offset = canvasWidth / 100.;
+    private static final double chartWidth = canvasWidth - 6. * offset;
+    private static final double chartHeight = canvasHeight - 3. * titleSpace;
+    private static final double barWidth = chartWidth / cardinality;
+    private static final double primaryTextY = chartHeight + titleSpace + 4. * offset;
+    private static final double secondaryTextY = chartHeight + 2. * titleSpace + 2. * offset;
+    private static final CodeDraw chart = new CodeDraw(canvasWidth, canvasHeight);
+    private static final TextFormat textFormat = new TextFormat();
 
     private enum SortMethod {
         INSERTION,
         SELECTION,
         BUBBLE,
         MERGE,
-        QUICK
+        QUICK,
+        LINEAR,
+        BINARY
     }
 
     public static void main(String[] args) {
@@ -98,13 +101,13 @@ public class SortDraw {
             // bubble sort
             case BUBBLE -> {
                 for (int i = 0; i < data.length - 1; i++) {
-                    drawChart(data, i + 1, 0, cardinality, 0);
+                    drawChart(data, i + 1, 0, cardinality - i, 0);
                     for (int j = 0; j < data.length - i - 1; j++) {
                         if (data[j] > data[j + 1]) {
                             highlightBarGroup(j + 1, 1);
                             exchange(data, j, j + 1);
                         }
-                        drawChart(data, i + 1, j + 1, cardinality, j + 1);
+                        drawChart(data, i + 1, j + 1, cardinality - i, j + 1);
                     }
                     endOfIterationText(i + 1);
                 }
@@ -125,6 +128,67 @@ public class SortDraw {
                 drawChart(data, 0, 0, cardinality + 1, -1);
                 chart.drawText(4 * offset, secondaryTextY, "Finished sorting!");
                 chart.show();
+            }
+
+            // linear search
+            case LINEAR -> {
+                if (searchValue < 1){
+                    searchValue = random.nextInt(lowerBound, upperBound);
+                }
+                boolean found = false;
+                for (int i = 0; i < data.length; i++) {
+                    drawChart(data, i + 1, i, cardinality + 1, i);
+                    if (data[i] == searchValue){
+                        found = true;
+                        chart.drawText(4 * offset, secondaryTextY, "Found key " + searchValue + " on index " + i);
+                        chart.show(longWait);
+                        break;
+                    }
+                }
+                if (!found){
+                    drawChart(data, data.length, -1, -1, -1);
+                    chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found");
+                    chart.show(longWait);
+                }
+            }
+
+            // binary search
+            case BINARY -> {
+                if (searchValue < 1){
+                    searchValue = random.nextInt(lowerBound, upperBound);
+                }
+                boolean found = false;
+
+                boundedInsertionSort(data,0, data.length - 1);
+
+                int step = 1;
+                int lo = 0, hi = data.length - 1;
+                while (lo <= hi) {
+                    int mid = lo + (hi - lo) / 2;
+                    int value = data[mid];
+                    drawChart(data, step, lo, hi + 1, mid);
+                    if (value < searchValue) {
+                        chart.drawText(4 * offset, secondaryTextY, searchValue + " cannot be on the left half - continue search on right side only...");
+                        chart.show(longWait);
+                        lo = mid + 1;
+                    } else if (value > searchValue) {
+                        chart.drawText(4 * offset, secondaryTextY, searchValue + " cannot be on the right half - continue search on left side only...");
+                        chart.show(longWait);
+                        hi = mid - 1;
+                    } else {
+                        found = true;
+                        chart.drawText(4 * offset, secondaryTextY, "Found key " + searchValue + " on index " + mid + " - linear search would need " + (mid + 1) + " step(s)");
+                        chart.show(longWait);
+                        break;
+                    }
+                    step += 1;
+                }
+                if (!found){
+                    drawChart(data, step, -1, hi -1, -1);
+                    chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found - linear search would need " + data.length + " step(s)");
+                    chart.show(longWait);
+                }
+
             }
 
             default -> {
@@ -233,15 +297,15 @@ public class SortDraw {
             mergeChart.drawText(2 * offset, primaryTextY, text);
             mergeChart.setColor(Color.red);
             mergeChart.setLineWidth(3);
-            double x = 2 * offset + chartWidth - (hi - lo + 1) % 2 * chartWidth / ((hi - lo + 1) + (hi - lo + 1) % 2);
-            double y = chartHeight / 2 + titleSpace - (data[k] * (chartHeight / 2 - titleSpace) / (upperBound - 1));
-            mergeChart.drawLine(2 * offset, y, x, y);
+            double x = 2. * offset + chartWidth - (hi - lo + 1) % 2 * chartWidth / ((hi - lo + 1) + (hi - lo + 1) % 2);
+            double y = chartHeight / 2. + titleSpace - (data[k] * (chartHeight / 2. - titleSpace) / (upperBound - 1));
+            mergeChart.drawLine(2. * offset, y, x, y);
             mergeChart.setLineWidth(1);
             mergeChart.setColor(Color.black);
             mergeChart.show(longWait);
             drawMerge(mergeChart, Arrays.copyOfRange(data, lo, hi + 1), Arrays.copyOfRange(help, lo, hi + 1), i - lo, j - mid - 1, recursion);
         }
-        mergeChart.drawText(2 * offset, primaryTextY, "Merge completed!");
+        mergeChart.drawText(2. * offset, primaryTextY, "Merge completed!");
         mergeChart.show(longWait);
         mergeChart.close();
     }
@@ -250,30 +314,30 @@ public class SortDraw {
         if (hi - lo < splitCutoff) {
             drawChart(data, recursion, lo, hi + 1, -1);
             if (hi < lo) {
-                chart.drawText(4 * offset, secondaryTextY, "Base case: no data points to be sorted - returning to recursion level " + (recursion - 1));
+                chart.drawText(4. * offset, secondaryTextY, "Base case: no data points to be sorted - returning to recursion level " + (recursion - 1));
             } else if (hi == lo) {
-                chart.drawText(4 * offset, secondaryTextY, "Base case: one data point to be sorted - returning to recursion level " + (recursion - 1));
+                chart.drawText(4. * offset, secondaryTextY, "Base case: one data point to be sorted - returning to recursion level " + (recursion - 1));
             } else {
-                chart.drawText(4 * offset, secondaryTextY, "Less than " + (splitCutoff + 1) + " data points - using insertion sort...");
+                chart.drawText(4. * offset, secondaryTextY, "Less than " + (splitCutoff + 1) + " data points - using insertion sort...");
                 chart.show(longWait);
                 boundedInsertionSort(data, lo, hi + 1);
                 drawChart(data, recursion, lo, hi + 1, -1);
-                chart.drawText(4 * offset, secondaryTextY, "Returning to recursion level " + (recursion - 1));
+                chart.drawText(4. * offset, secondaryTextY, "Returning to recursion level " + (recursion - 1));
             }
             chart.show(longWait);
             return;
         }
         int j = partition(data, lo, hi, recursion);
         drawChart(data, recursion, lo, hi + 1, j);
-        chart.drawText(4 * offset, secondaryTextY, "Pivot element is on its correct place - sorting the left side...");
+        chart.drawText(4. * offset, secondaryTextY, "Pivot element is on its correct place - sorting the left side...");
         chart.show(longWait);
         quickSort(data, lo, j - 1, recursion + 1);
         drawChart(data, recursion, lo, hi + 1, j);
-        chart.drawText(4 * offset, secondaryTextY, "Left part is sorted - sorting the right side...");
+        chart.drawText(4. * offset, secondaryTextY, "Left part is sorted - sorting the right side...");
         chart.show(longWait);
         quickSort(data, j + 1, hi, recursion + 1);
         drawChart(data, recursion, lo, hi + 1, j);
-        chart.drawText(4 * offset, secondaryTextY, "Left and right part sorted - returning to recursion level " + (recursion - 1));
+        chart.drawText(4. * offset, secondaryTextY, "Left and right part sorted - returning to recursion level " + (recursion - 1));
         chart.show(longWait);
     }
 
@@ -282,7 +346,7 @@ public class SortDraw {
         int k = lo;
         int v = data[hi];
         drawChart(data, recursion, lo, hi + 1, hi);
-        chart.drawText(4 * offset, secondaryTextY, "Pivot element found - moving elements less than pivot to the left...");
+        chart.drawText(4. * offset, secondaryTextY, "Pivot element found - moving elements less than pivot to the left...");
         chart.show(longWait);
         for (int i = k; i < hi; i++) {
             if (showPartition) {
@@ -292,7 +356,7 @@ public class SortDraw {
             }
             if (data[i] < v) {
                 if (showPartition) {
-                    chart.drawText(4 * offset, secondaryTextY, "Found an element less than pivot - exchanging...");
+                    chart.drawText(4. * offset, secondaryTextY, "Found an element less than pivot - exchanging...");
                     drawVerticalLine(k - 1);
                     chart.show(longWait);
                     highlightBarGroup(k, 1);
@@ -310,7 +374,7 @@ public class SortDraw {
         }
         drawChart(data, recursion, lo, hi + 1, hi);
         drawVerticalLine(k - 1);
-        chart.drawText(4 * offset, secondaryTextY, "Moving Pivot element to its correct place (vertical line marker).");
+        chart.drawText(4. * offset, secondaryTextY, "Moving Pivot element to its correct place (vertical line marker).");
         chart.show(longWait);
         highlightBarGroup(k, 1);
         exchange(data, k, hi);
@@ -345,6 +409,8 @@ public class SortDraw {
             case BUBBLE -> chart.drawText(4 * offset, offset, "Bubble Sort");
             case MERGE -> chart.drawText(4 * offset, offset, "Merge Sort");
             case QUICK -> chart.drawText(4 * offset, offset, "Quick Sort");
+            case LINEAR -> chart.drawText(4 * offset, offset, "Linear Search");
+            case BINARY -> chart.drawText(4 * offset, offset, "Binary Search (works only on sorted data)");
             default -> {
             }
         }
@@ -359,12 +425,12 @@ public class SortDraw {
                 chart.setColor(Color.gray);
             }
             double barHeight = data[i] * chartHeight / (upperBound - 1);
-            chart.fillRectangle(4 * offset + i * barWidth, chartHeight + titleSpace - barHeight, barWidth - 1, barHeight);
+            chart.fillRectangle(4. * offset + i * barWidth, chartHeight + titleSpace - barHeight, barWidth - 1, barHeight);
         }
         if (highlight >= 0 && highlight < data.length) {
             chart.setColor(Color.red);
             chart.setLineWidth(3);
-            chart.drawRectangle(4 * offset + highlight * barWidth, titleSpace, barWidth, chartHeight);
+            chart.drawRectangle(4. * offset + highlight * barWidth, titleSpace, barWidth, chartHeight);
             chart.setColor(Color.black);
             chart.setLineWidth(1);
         }
@@ -381,11 +447,20 @@ public class SortDraw {
                 }
                 case SELECTION, BUBBLE -> text = "Outer loop iteration #" + step;
                 case MERGE, QUICK -> text = "Recursion level " + step;
+                case LINEAR, BINARY -> {
+                    text = "Search for key " + searchValue + ": step " + step;
+                    chart.setColor(Color.red);
+                    chart.setLineWidth(3);
+                    double lineHeight = chartHeight + titleSpace - Math.min(searchValue * chartHeight / (upperBound - 1), chartHeight + offset);
+                    chart.drawLine(4. * offset, lineHeight, 4. * offset + chartWidth, lineHeight);
+                    chart.setLineWidth(1);
+                    chart.setColor(Color.black);
+                }
                 default -> {
                 }
             }
         }
-        chart.drawText(4 * offset, primaryTextY, text);
+        chart.drawText(4. * offset, primaryTextY, text);
 
         if (sortMethod != SortMethod.QUICK && sortMethod != SortMethod.SELECTION) {
             chart.show(shortWait);
@@ -398,17 +473,17 @@ public class SortDraw {
     private static void drawMerge(CodeDraw mergeChart, int[] data, int[] help, int leftIndex, int rightIndex, int recursion) {
         mergeChart.clear();
         mergeChart.setColor(Color.black);
-        mergeChart.drawText(2 * offset, offset, "Merging recursion level " + (recursion + 1) + " into level " + recursion);
+        mergeChart.drawText(2. * offset, offset, "Merging recursion level " + (recursion + 1) + " into level " + recursion);
 
         double halfWidth = chartWidth / 2.;
         double halfHeight = chartHeight / 2.;
         double barWidth = chartWidth / (help.length + help.length % 2);
-        mergeChart.drawRectangle(2 * offset, titleSpace, halfWidth, halfHeight);
-        mergeChart.drawRectangle(2 * offset + halfWidth, titleSpace, halfWidth - (help.length % 2 * barWidth), halfHeight);
-        mergeChart.drawRectangle(2 * offset, titleSpace + offset + halfHeight, chartWidth - (help.length % 2 * barWidth), halfHeight);
-        mergeChart.drawText(3 * offset, titleSpace + offset, "help (left half)");
-        mergeChart.drawText(3 * offset + halfWidth, titleSpace + offset, "help (right half)");
-        mergeChart.drawText(3 * offset, titleSpace + 2 * offset + halfHeight, "data");
+        mergeChart.drawRectangle(2. * offset, titleSpace, halfWidth, halfHeight);
+        mergeChart.drawRectangle(2. * offset + halfWidth, titleSpace, halfWidth - (help.length % 2 * barWidth), halfHeight);
+        mergeChart.drawRectangle(2. * offset, titleSpace + offset + halfHeight, chartWidth - (help.length % 2 * barWidth), halfHeight);
+        mergeChart.drawText(3. * offset, titleSpace + offset, "help (left half)");
+        mergeChart.drawText(3. * offset + halfWidth, titleSpace + offset, "help (right half)");
+        mergeChart.drawText(3. * offset, titleSpace + 2. * offset + halfHeight, "data");
 
         mergeChart.setColor(Color.gray);
         for (int i = 0; i < help.length; i++) {
@@ -416,7 +491,7 @@ public class SortDraw {
                 mergeChart.setColor(Color.black);
             }
             double barHeight = help[i] * (halfHeight - titleSpace) / (upperBound - 1);
-            mergeChart.fillRectangle(2 * offset + i * barWidth, halfHeight + titleSpace - barHeight, barWidth - 1, barHeight);
+            mergeChart.fillRectangle(2. * offset + i * barWidth, halfHeight + titleSpace - barHeight, barWidth - 1, barHeight);
             mergeChart.setColor(Color.gray);
         }
         mergeChart.setColor(Color.black);
@@ -425,11 +500,11 @@ public class SortDraw {
                 mergeChart.setColor(Color.gray);
             }
             double barHeight = data[i] * (halfHeight - titleSpace) / (upperBound - 1);
-            mergeChart.fillRectangle(2 * offset + i * barWidth, chartHeight + titleSpace - barHeight + offset, barWidth - 1, barHeight);
+            mergeChart.fillRectangle(2. * offset + i * barWidth, chartHeight + titleSpace - barHeight + offset, barWidth - 1, barHeight);
         }
         mergeChart.setColor(Color.cyan);
         mergeChart.setLineWidth(3);
-        mergeChart.drawLine(2 * offset + halfWidth, titleSpace, 2 * offset + halfWidth, titleSpace + halfHeight);
+        mergeChart.drawLine(2. * offset + halfWidth, titleSpace, 2. * offset + halfWidth, titleSpace + halfHeight);
         mergeChart.setLineWidth(1);
         mergeChart.setColor(Color.black);
     }
@@ -437,7 +512,7 @@ public class SortDraw {
     private static void highlightBarGroup(int barIndex, int barCount) {
         chart.setColor(Color.red);
         chart.setLineWidth(3);
-        chart.drawRectangle(4 * offset + barIndex * barWidth, titleSpace, barCount * barWidth, chartHeight);
+        chart.drawRectangle(4. * offset + barIndex * barWidth, titleSpace, barCount * barWidth, chartHeight);
         chart.setColor(Color.black);
         chart.setLineWidth(1);
         chart.show(shortWait);
@@ -446,8 +521,8 @@ public class SortDraw {
     private static void drawVerticalLine(int index) {
         chart.setColor(Color.cyan);
         chart.setLineWidth(3);
-        chart.drawLine(4 * offset + (index + 1) * barWidth, titleSpace - offset,
-                4 * offset + (index + 1) * barWidth, chartHeight + titleSpace + offset);
+        chart.drawLine(4. * offset + (index + 1) * barWidth, titleSpace - offset,
+                4. * offset + (index + 1) * barWidth, chartHeight + titleSpace + offset);
         chart.setLineWidth(1);
         chart.setColor(Color.black);
     }
@@ -475,7 +550,7 @@ public class SortDraw {
             default -> {
             }
         }
-        chart.drawText(4 * offset, secondaryTextY, text);
+        chart.drawText(4. * offset, secondaryTextY, text);
         chart.show(longWait);
     }
 

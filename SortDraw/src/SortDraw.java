@@ -8,7 +8,7 @@ import java.util.Random;
 public class SortDraw {
 
     // main settings
-    private static final SortMethod sortMethod = SortMethod.BINARY; // choose from INSERTION, SELECTION, BUBBLE, MERGE, QUICK (sort) or LINEAR, BINARY (search)
+    private static final SortMethod sortMethod = SortMethod.SELECTION; // choose from INSERTION, SELECTION, BUBBLE, MERGE, QUICK (sort) or LINEAR, BINARY (search)
     private static final int cardinality = 29; // number of data points to be sorted - recommended range is [10, 100]
     private static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
     private static final int upperBound = 35; // upper bound of values (exclusive) - must be greater than lowerBound
@@ -46,8 +46,8 @@ public class SortDraw {
 
         textFormat.setFontSize(canvasWidth / 35);
         chart.setTextFormat(textFormat);
-        chart.setCanvasPositionX(25);
-        chart.setCanvasPositionY(50);
+        chart.setWindowPositionX(0);
+        chart.setWindowPositionY(0);
         chart.setTitle("");
 
         Random random = new Random();
@@ -132,20 +132,20 @@ public class SortDraw {
 
             // linear search
             case LINEAR -> {
-                if (searchValue < 1){
+                if (searchValue < 1) {
                     searchValue = random.nextInt(lowerBound, upperBound);
                 }
                 boolean found = false;
                 for (int i = 0; i < data.length; i++) {
                     drawChart(data, i + 1, i, cardinality + 1, i);
-                    if (data[i] == searchValue){
+                    if (data[i] == searchValue) {
                         found = true;
                         chart.drawText(4 * offset, secondaryTextY, "Found key " + searchValue + " on index " + i);
                         chart.show(longWait);
                         break;
                     }
                 }
-                if (!found){
+                if (!found) {
                     drawChart(data, data.length, -1, -1, -1);
                     chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found");
                     chart.show(longWait);
@@ -154,12 +154,14 @@ public class SortDraw {
 
             // binary search
             case BINARY -> {
-                if (searchValue < 1){
+                if (searchValue < 1) {
                     searchValue = random.nextInt(lowerBound, upperBound);
                 }
                 boolean found = false;
 
-                boundedInsertionSort(data,0, data.length - 1);
+                // in reality, it's your own responsibility to provide pre-sorted data
+                // it would be absurd to sort before every call of a binary search
+                boundedInsertionSort(data, 0, data.length - 1);
 
                 int step = 1;
                 int lo = 0, hi = data.length - 1;
@@ -168,11 +170,11 @@ public class SortDraw {
                     int value = data[mid];
                     drawChart(data, step, lo, hi + 1, mid);
                     if (value < searchValue) {
-                        chart.drawText(4 * offset, secondaryTextY, searchValue + " cannot be on the left half - continue search on right side only...");
+                        chart.drawText(4 * offset, secondaryTextY, "Key on mid (" + value + ") is less than " + searchValue + " - continue search on right side only...");
                         chart.show(longWait);
                         lo = mid + 1;
                     } else if (value > searchValue) {
-                        chart.drawText(4 * offset, secondaryTextY, searchValue + " cannot be on the right half - continue search on left side only...");
+                        chart.drawText(4 * offset, secondaryTextY, "Key on mid (" + value + ") is greater than " + searchValue + " - continue search on left side only...");
                         chart.show(longWait);
                         hi = mid - 1;
                     } else {
@@ -183,9 +185,10 @@ public class SortDraw {
                     }
                     step += 1;
                 }
-                if (!found){
-                    drawChart(data, step, -1, hi -1, -1);
-                    chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found - linear search would need " + data.length + " step(s)");
+                if (!found) {
+                    drawChart(data, step, -1, hi - 1, -1);
+                    //chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found - linear search would need " + data.length + " step(s)");
+                    chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found - linear search would need " + (lo + 1) + " step(s)");
                     chart.show(longWait);
                 }
 
@@ -259,8 +262,8 @@ public class SortDraw {
 
     private static void visualMerge(int[] data, int[] help, int lo, int mid, int hi, int recursion) {
         CodeDraw mergeChart = new CodeDraw(canvasWidth, canvasHeight);
-        mergeChart.setCanvasPositionX(25 + canvasWidth);
-        mergeChart.setCanvasPositionY(150);
+        mergeChart.setWindowPositionX(canvasWidth);
+        mergeChart.setWindowPositionY(100);
         mergeChart.setTextFormat(textFormat);
         mergeChart.setTitle("");
 

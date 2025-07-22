@@ -8,7 +8,7 @@ import java.util.Random;
 public class SortDraw {
 
     // main settings
-    private static final SortMethod sortMethod = SortMethod.SELECTION; // choose from INSERTION, SELECTION, BUBBLE, MERGE, QUICK (sort) or LINEAR, BINARY (search)
+    private static final SortMethod sortMethod = SortMethod.MERGE; // choose from INSERTION, SELECTION, BUBBLE, MERGE, QUICK (sort) or LINEAR, BINARY (search)
     private static final int cardinality = 29; // number of data points to be sorted - recommended range is [10, 100]
     private static final int lowerBound = 1; // lower bound of values (inclusive) - must be greater than 0
     private static final int upperBound = 35; // upper bound of values (exclusive) - must be greater than lowerBound
@@ -67,7 +67,7 @@ public class SortDraw {
                         exchange(data, j, j - 1);
                         drawChart(data, i, 0, j, j - 1);
                     }
-                    endOfIterationText(i);
+                    secondaryText("Data locally sorted up to vertical line marker - starting next iteration...");
                 }
                 drawChart(data, cardinality, 0, cardinality, -1);
             }
@@ -81,18 +81,20 @@ public class SortDraw {
                         drawChart(data, i + 1, i, cardinality, min);
                         highlightBarGroup(j, 1);
                         if (data[j] < data[min]) {
-                            chart.drawText(4 * offset, secondaryTextY, "Found new minimum fur current iteration.");
-                            chart.show(longWait);
+                            secondaryText("Found new minimum fur current iteration.");
                             min = j;
                         }
                     }
                     drawChart(data, i + 1, i, cardinality, min);
-                    chart.drawText(4 * offset, secondaryTextY, "Place minimum at the first unsorted position.");
+                    secondaryText("Place minimum at the first unsorted position.");
                     highlightBarGroup(i, 1);
-                    chart.show(longWait);
                     exchange(data, i, min);
                     drawChart(data, i + 1, i, cardinality, i);
-                    endOfIterationText(i + 1);
+                    if (i == 0){
+                        secondaryText("The first data point is globally sorted - starting next iteration...");
+                    } else{
+                        secondaryText("The first " + (i+1) + " data points are globally sorted - starting next iteration...");
+                    }
                 }
                 drawChart(data, cardinality, 0, cardinality, -1);
                 chart.show();
@@ -109,7 +111,11 @@ public class SortDraw {
                         }
                         drawChart(data, i + 1, j + 1, cardinality - i, j + 1);
                     }
-                    endOfIterationText(i + 1);
+                    if (i == 0){
+                        secondaryText("The last data point is globally sorted - starting next iteration...");
+                    } else{
+                        secondaryText("The last " + (i+1) + " data points are globally sorted - starting next iteration...");
+                    }
                 }
                 drawChart(data, cardinality, 0, cardinality, -1);
             }
@@ -118,16 +124,14 @@ public class SortDraw {
             case MERGE -> {
                 int[] help = new int[data.length];
                 mergeSort(data, help, 0, data.length - 1, 0);
-                chart.drawText(4 * offset, secondaryTextY, "Finished sorting!");
-                chart.show();
+                secondaryText("Finished sorting!");
             }
 
             // quick sort
             case QUICK -> {
                 quickSort(data, 0, data.length - 1, 0);
                 drawChart(data, 0, 0, cardinality + 1, -1);
-                chart.drawText(4 * offset, secondaryTextY, "Finished sorting!");
-                chart.show();
+                secondaryText("Finished sorting!");
             }
 
             // linear search
@@ -140,15 +144,13 @@ public class SortDraw {
                     drawChart(data, i + 1, i, cardinality + 1, i);
                     if (data[i] == searchValue) {
                         found = true;
-                        chart.drawText(4 * offset, secondaryTextY, "Found key " + searchValue + " on index " + i);
-                        chart.show(longWait);
+                        secondaryText("Found key " + searchValue + " on index " + i);
                         break;
                     }
                 }
                 if (!found) {
                     drawChart(data, data.length, -1, -1, -1);
-                    chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found");
-                    chart.show(longWait);
+                    secondaryText("Key " + searchValue + " not found");
                 }
             }
 
@@ -170,32 +172,26 @@ public class SortDraw {
                     int value = data[mid];
                     drawChart(data, step, lo, hi + 1, mid);
                     if (value < searchValue) {
-                        chart.drawText(4 * offset, secondaryTextY, "Key on mid (" + value + ") is less than " + searchValue + " - continue search on right side only...");
-                        chart.show(longWait);
+                        secondaryText("Key on mid (" + value + ") is less than " + searchValue + " - continue search on right side only...");
                         lo = mid + 1;
                     } else if (value > searchValue) {
-                        chart.drawText(4 * offset, secondaryTextY, "Key on mid (" + value + ") is greater than " + searchValue + " - continue search on left side only...");
-                        chart.show(longWait);
+                        secondaryText("Key on mid (" + value + ") is greater than " + searchValue + " - continue search on left side only...");
                         hi = mid - 1;
                     } else {
                         found = true;
-                        chart.drawText(4 * offset, secondaryTextY, "Found key " + searchValue + " on index " + mid + " - linear search would need " + (mid + 1) + " step(s)");
-                        chart.show(longWait);
+                        secondaryText("Found key " + searchValue + " on index " + mid + " - linear search would need " + (mid + 1) + " step(s)");
                         break;
                     }
                     step += 1;
                 }
                 if (!found) {
                     drawChart(data, step, -1, hi - 1, -1);
-                    //chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found - linear search would need " + data.length + " step(s)");
-                    chart.drawText(4 * offset, secondaryTextY, "Key " + searchValue + " not found - linear search would need " + (lo + 1) + " step(s)");
-                    chart.show(longWait);
+                    //secondaryText("Key " + searchValue + " not found - linear search would need " + data.length + " step(s)");
+                    secondaryText("Key " + searchValue + " not found - linear search would need " + (lo + 1) + " step(s)");
                 }
 
             }
 
-            default -> {
-            }
         }
     }
 
@@ -212,27 +208,20 @@ public class SortDraw {
         drawChart(data, recursion, lo, hi + 1, -1);
         highlightBarGroup(lo, hi - lo + 1);
         if (hi == lo) {
-            chart.drawText(4 * offset, secondaryTextY, "One data point - no further action needed...");
-            chart.show(longWait);
+            secondaryText("One data point - no further action needed...");
             return;
         } else if (hi - lo < splitCutoff) {
-            chart.drawText(4 * offset, secondaryTextY,
-                    "Less than " + (splitCutoff + 1) + " data points - using insertion sort...");
-            chart.show(longWait);
+            secondaryText("Less than " + (splitCutoff + 1) + " data points - using insertion sort...");
             boundedInsertionSort(data, lo, hi);
         } else {
             int mid = lo + (hi - lo) / 2;
-            chart.drawText(4 * offset, secondaryTextY,
-                    "More than " + splitCutoff + " data point(s) - splitting into recursion level " + (recursion + 1));
-            chart.show(longWait);
+            secondaryText("More than " + splitCutoff + " data point(s) - splitting into recursion level " + (recursion + 1));
             mergeSort(data, help, lo, mid, recursion + 1);
             mergeSort(data, help, mid + 1, hi, recursion + 1);
             drawChart(data, recursion, lo, hi + 1, -1);
             highlightBarGroup(lo, hi - lo + 1);
             drawVerticalLine(mid);
-            chart.drawText(4 * offset, secondaryTextY,
-                    "Merging recursion level " + (recursion + 1) + " into level " + recursion);
-            chart.show(longWait);
+            secondaryText("Merging recursion level " + (recursion + 1) + " into level " + recursion);
             if (showMerge) {
                 visualMerge(data, help, lo, mid, hi, recursion);
             } else {
@@ -262,8 +251,8 @@ public class SortDraw {
 
     private static void visualMerge(int[] data, int[] help, int lo, int mid, int hi, int recursion) {
         CodeDraw mergeChart = new CodeDraw(canvasWidth, canvasHeight);
-        mergeChart.setWindowPositionX(canvasWidth);
-        mergeChart.setWindowPositionY(100);
+        mergeChart.setWindowPositionX(chart.getWindowPositionX() + canvasWidth);
+        mergeChart.setWindowPositionY(chart.getWindowPositionY() + 100);
         mergeChart.setTextFormat(textFormat);
         mergeChart.setTitle("");
 
@@ -317,31 +306,26 @@ public class SortDraw {
         if (hi - lo < splitCutoff) {
             drawChart(data, recursion, lo, hi + 1, -1);
             if (hi < lo) {
-                chart.drawText(4. * offset, secondaryTextY, "Base case: no data points to be sorted - returning to recursion level " + (recursion - 1));
+                secondaryText("Base case: no data points to be sorted - returning to recursion level " + (recursion - 1));
             } else if (hi == lo) {
-                chart.drawText(4. * offset, secondaryTextY, "Base case: one data point to be sorted - returning to recursion level " + (recursion - 1));
+                secondaryText("Base case: one data point to be sorted - returning to recursion level " + (recursion - 1));
             } else {
-                chart.drawText(4. * offset, secondaryTextY, "Less than " + (splitCutoff + 1) + " data points - using insertion sort...");
-                chart.show(longWait);
+                secondaryText("Less than " + (splitCutoff + 1) + " data points - using insertion sort...");
                 boundedInsertionSort(data, lo, hi + 1);
                 drawChart(data, recursion, lo, hi + 1, -1);
-                chart.drawText(4. * offset, secondaryTextY, "Returning to recursion level " + (recursion - 1));
+                secondaryText("Returning to recursion level " + (recursion - 1));
             }
-            chart.show(longWait);
             return;
         }
         int j = partition(data, lo, hi, recursion);
         drawChart(data, recursion, lo, hi + 1, j);
-        chart.drawText(4. * offset, secondaryTextY, "Pivot element is on its correct place - sorting the left side...");
-        chart.show(longWait);
+        secondaryText("Pivot element is on its correct place - sorting the left side...");
         quickSort(data, lo, j - 1, recursion + 1);
         drawChart(data, recursion, lo, hi + 1, j);
-        chart.drawText(4. * offset, secondaryTextY, "Left part is sorted - sorting the right side...");
-        chart.show(longWait);
+        secondaryText("Left part is sorted - sorting the right side...");
         quickSort(data, j + 1, hi, recursion + 1);
         drawChart(data, recursion, lo, hi + 1, j);
-        chart.drawText(4. * offset, secondaryTextY, "Left and right part sorted - returning to recursion level " + (recursion - 1));
-        chart.show(longWait);
+        secondaryText("Left and right part sorted - returning to recursion level " + (recursion - 1));
     }
 
     // the rightmost element is always chosen as the pivot element v
@@ -349,8 +333,7 @@ public class SortDraw {
         int k = lo;
         int v = data[hi];
         drawChart(data, recursion, lo, hi + 1, hi);
-        chart.drawText(4. * offset, secondaryTextY, "Pivot element found - moving elements less than pivot to the left...");
-        chart.show(longWait);
+        secondaryText("Pivot element found - moving elements less than pivot to the left...");
         for (int i = k; i < hi; i++) {
             if (showPartition) {
                 drawChart(data, recursion, lo, hi + 1, i);
@@ -359,9 +342,8 @@ public class SortDraw {
             }
             if (data[i] < v) {
                 if (showPartition) {
-                    chart.drawText(4. * offset, secondaryTextY, "Found an element less than pivot - exchanging...");
                     drawVerticalLine(k - 1);
-                    chart.show(longWait);
+                    secondaryText("Found an element less than pivot - exchanging...");
                     highlightBarGroup(k, 1);
                 }
                 exchange(data, i, k++);
@@ -377,8 +359,7 @@ public class SortDraw {
         }
         drawChart(data, recursion, lo, hi + 1, hi);
         drawVerticalLine(k - 1);
-        chart.drawText(4. * offset, secondaryTextY, "Moving Pivot element to its correct place (vertical line marker).");
-        chart.show(longWait);
+        secondaryText("Moving Pivot element to its correct place (vertical line marker).");
         highlightBarGroup(k, 1);
         exchange(data, k, hi);
         return k;
@@ -414,8 +395,6 @@ public class SortDraw {
             case QUICK -> chart.drawText(4 * offset, offset, "Quick Sort");
             case LINEAR -> chart.drawText(4 * offset, offset, "Linear Search");
             case BINARY -> chart.drawText(4 * offset, offset, "Binary Search (works only on sorted data)");
-            default -> {
-            }
         }
 
         chart.drawRectangle(4 * offset, titleSpace, chartWidth, chartHeight);
@@ -516,8 +495,8 @@ public class SortDraw {
         chart.setColor(Color.red);
         chart.setLineWidth(3);
         chart.drawRectangle(4. * offset + barIndex * barWidth, titleSpace, barCount * barWidth, chartHeight);
-        chart.setColor(Color.black);
         chart.setLineWidth(1);
+        chart.setColor(Color.black);
         chart.show(shortWait);
     }
 
@@ -530,29 +509,7 @@ public class SortDraw {
         chart.setColor(Color.black);
     }
 
-    private static void endOfIterationText(int iteration) {
-        String text = "";
-        switch (sortMethod) {
-            case INSERTION -> {
-                text = "Data locally sorted up to vertical line marker - starting next iteration...";
-            }
-            case SELECTION -> {
-                if (iteration == 1) {
-                    text = "The first entry is globally sorted - starting next iteration...";
-                } else {
-                    text = "The first " + iteration + " entries are globally sorted - starting next iteration...";
-                }
-            }
-            case BUBBLE -> {
-                if (iteration == 1) {
-                    text = "The last entry is globally sorted - starting next iteration...";
-                } else {
-                    text = "The last " + iteration + " entries are globally sorted - starting next iteration...";
-                }
-            }
-            default -> {
-            }
-        }
+    private static void secondaryText(String text) {
         chart.drawText(4. * offset, secondaryTextY, text);
         chart.show(longWait);
     }
